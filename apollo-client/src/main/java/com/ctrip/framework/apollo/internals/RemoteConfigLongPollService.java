@@ -91,6 +91,7 @@ public class RemoteConfigLongPollService {
 
   public boolean submit(String namespace, RemoteConfigRepository remoteConfigRepository) {
     boolean added = m_longPollNamespaces.put(namespace, remoteConfigRepository);
+    // TODO: 将namespace放到了一个map里面
     m_notifications.putIfAbsent(namespace, INIT_NOTIFICATION_ID);
     if (!m_longPollStarted.get()) {
       // TODO: 开始启动长连接
@@ -123,7 +124,7 @@ public class RemoteConfigLongPollService {
               //ignore
             }
           }
-          // TODO:
+          // TODO: 开始建立与服务端的长连接
           doLongPollingRefresh(appId, cluster, dataCenter, secret);
         }
       });
@@ -196,6 +197,7 @@ public class RemoteConfigLongPollService {
           updateNotifications(response.getBody());
           updateRemoteNotifications(response.getBody());
           transaction.addData("Result", response.getBody().toString());
+          // TODO: 接下来会去sync()
           notify(lastServiceDto, response.getBody());
         }
 
@@ -233,6 +235,7 @@ public class RemoteConfigLongPollService {
     for (ApolloConfigNotification notification : notifications) {
       String namespaceName = notification.getNamespaceName();
       //create a new list to avoid ConcurrentModificationException
+      // TODO: 将需要更新的remoteConfigRepository拿出来
       List<RemoteConfigRepository> toBeNotified =
           Lists.newArrayList(m_longPollNamespaces.get(namespaceName));
       ApolloNotificationMessages originalMessages = m_remoteNotificationMessages.get(namespaceName);
@@ -242,6 +245,7 @@ public class RemoteConfigLongPollService {
           .get(String.format("%s.%s", namespaceName, ConfigFileFormat.Properties.getValue())));
       for (RemoteConfigRepository remoteConfigRepository : toBeNotified) {
         try {
+          // TODO: 会去向config service进行同步，通知到对应的remoteConfigRepository，然后进行更新(sync)
           remoteConfigRepository.onLongPollNotified(lastServiceDto, remoteMessages);
         } catch (Throwable ex) {
           Tracer.logError(ex);
@@ -256,6 +260,7 @@ public class RemoteConfigLongPollService {
         continue;
       }
       String namespaceName = notification.getNamespaceName();
+      // TODO: 如果之前有这个namespace,那就直接加进去，其实就是覆盖掉了原来的值
       if (m_notifications.containsKey(namespaceName)) {
         m_notifications.put(namespaceName, notification.getNotificationId());
       }
@@ -278,13 +283,15 @@ public class RemoteConfigLongPollService {
         continue;
       }
 
+      // TODO: 获取本地缓存的 ApolloNotificationMessages
       ApolloNotificationMessages localRemoteMessages =
           m_remoteNotificationMessages.get(notification.getNamespaceName());
+      // TODO: 如果为空，就创建一个 ApolloNotificationMessages
       if (localRemoteMessages == null) {
         localRemoteMessages = new ApolloNotificationMessages();
         m_remoteNotificationMessages.put(notification.getNamespaceName(), localRemoteMessages);
       }
-
+      // TODO: 将本地的message 与远端返回的进行merge
       localRemoteMessages.mergeFrom(notification.getMessages());
     }
   }

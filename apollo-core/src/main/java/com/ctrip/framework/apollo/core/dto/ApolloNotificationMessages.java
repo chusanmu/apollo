@@ -50,6 +50,7 @@ public class ApolloNotificationMessages {
 
     for (Map.Entry<String, Long> entry : source.getDetails().entrySet()) {
       //to make sure the notification id always grows bigger
+      // TODO: 如果现在又的notificationId大于等于config service传过来的，那就直接跳过就好了
       if (this.has(entry.getKey()) &&
           this.get(entry.getKey()) >= entry.getValue()) {
         continue;

@@ -56,6 +56,7 @@ public class PropertySourcesProcessor implements BeanFactoryPostProcessor, Envir
   @Override
   public void postProcessBeanFactory(ConfigurableListableBeanFactory beanFactory) throws BeansException {
     initializePropertySources();
+    // TODO: 初始化自动更新属性功能
     initializeAutoUpdatePropertiesFeature(beanFactory);
   }
 
@@ -127,15 +128,17 @@ public class PropertySourcesProcessor implements BeanFactoryPostProcessor, Envir
    * @param beanFactory
    */
   private void initializeAutoUpdatePropertiesFeature(ConfigurableListableBeanFactory beanFactory) {
+    // TODO: 判断是否开启了这个功能，这个beanFactory是否已经开启过了
     if (!configUtil.isAutoUpdateInjectedSpringPropertiesEnabled() ||
         !AUTO_UPDATE_INITIALIZED_BEAN_FACTORIES.add(beanFactory)) {
       return;
     }
 
+    // TODO: 创建自动更新配置的listener
     AutoUpdateConfigChangeListener autoUpdateConfigChangeListener = new AutoUpdateConfigChangeListener(
         environment, beanFactory);
 
-    // TODO:
+    // TODO: 返回创建的所有的ConfigPropertySource, 包括bootstrap创建的ConfigPropertySource
     List<ConfigPropertySource> configPropertySources = configPropertySourceFactory.getAllConfigPropertySources();
     // TODO: 给每个配置 添加了一个配置文件变更监听器
     for (ConfigPropertySource configPropertySource : configPropertySources) {

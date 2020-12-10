@@ -44,8 +44,14 @@ public class SpringValueDefinitionProcessor implements BeanDefinitionRegistryPos
     placeholderHelper = SpringInjector.getInstance(PlaceholderHelper.class);
   }
 
+  /**
+   * TODO: 所有的beanDefinition注册完成之后 会进行回调
+   * @param registry
+   * @throws BeansException
+   */
   @Override
   public void postProcessBeanDefinitionRegistry(BeanDefinitionRegistry registry) throws BeansException {
+    // TODO: 如果你开启了配置自动更新，这里就去处理@Value
     if (configUtil.isAutoUpdateInjectedSpringPropertiesEnabled()) {
       processPropertyValues(registry);
     }
@@ -66,6 +72,7 @@ public class SpringValueDefinitionProcessor implements BeanDefinitionRegistryPos
   }
 
   private void processPropertyValues(BeanDefinitionRegistry beanRegistry) {
+    // TODO: 标记，查看是否已经处理过
     if (!PROPERTY_VALUES_PROCESSED_BEAN_FACTORIES.add(beanRegistry)) {
       // already initialized
       return;
@@ -79,8 +86,11 @@ public class SpringValueDefinitionProcessor implements BeanDefinitionRegistryPos
 
     String[] beanNames = beanRegistry.getBeanDefinitionNames();
     for (String beanName : beanNames) {
+      // TODO: 挨个的把beanDefinition拿到
       BeanDefinition beanDefinition = beanRegistry.getBeanDefinition(beanName);
+      // TODO: 获取PropertyValue
       MutablePropertyValues mutablePropertyValues = beanDefinition.getPropertyValues();
+      // TODO: 把所有的PropertyValue拿到
       List<PropertyValue> propertyValues = mutablePropertyValues.getPropertyValueList();
       for (PropertyValue propertyValue : propertyValues) {
         Object value = propertyValue.getValue();
@@ -94,6 +104,7 @@ public class SpringValueDefinitionProcessor implements BeanDefinitionRegistryPos
           continue;
         }
 
+        // TODO: 所有的key 对应了一个springValueDefinition 放进了springValueDefinitions中
         for (String key : keys) {
           springValueDefinitions.put(beanName, new SpringValueDefinition(key, placeholder, propertyValue.getName()));
         }

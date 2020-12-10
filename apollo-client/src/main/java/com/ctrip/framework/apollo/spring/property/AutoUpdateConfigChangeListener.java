@@ -40,20 +40,29 @@ public class AutoUpdateConfigChangeListener implements ConfigChangeListener{
     this.gson = new Gson();
   }
 
+  /**
+   * TODO: 当配置文件变更的时候会进行回调
+   *
+   * @param changeEvent the event for this change
+   */
   @Override
   public void onChange(ConfigChangeEvent changeEvent) {
     Set<String> keys = changeEvent.changedKeys();
+    // TODO: 如果变更的keys为空，就直接返回
     if (CollectionUtils.isEmpty(keys)) {
       return;
     }
+    // TODO: 遍历所有的变更的keys
     for (String key : keys) {
       // 1. check whether the changed key is relevant
+      // TODO: 从SpringValue注册器中拿到一个springValue集合
       Collection<SpringValue> targetValues = springValueRegistry.get(beanFactory, key);
       if (targetValues == null || targetValues.isEmpty()) {
         continue;
       }
 
       // 2. update the value
+      // TODO: 更新springValue的值
       for (SpringValue val : targetValues) {
         updateSpringValue(val);
       }
@@ -62,7 +71,9 @@ public class AutoUpdateConfigChangeListener implements ConfigChangeListener{
 
   private void updateSpringValue(SpringValue springValue) {
     try {
+      // TODO: 获取最新的值，会从environment中获取，进而会从apollo获取
       Object value = resolvePropertyValue(springValue);
+      // TODO: 利用反射进行更新
       springValue.update(value);
 
       logger.info("Auto update apollo changed value successfully, new value: {}, {}", value,
@@ -81,11 +92,13 @@ public class AutoUpdateConfigChangeListener implements ConfigChangeListener{
     Object value = placeholderHelper
         .resolvePropertyValue(beanFactory, springValue.getBeanName(), springValue.getPlaceholder());
 
+    // TODO: 判断你是不是json, 如果是json，就给转成一个对象
     if (springValue.isJson()) {
       value = parseJsonValue((String)value, springValue.getGenericType());
     } else {
       if (springValue.isField()) {
         // org.springframework.beans.TypeConverter#convertIfNecessary(java.lang.Object, java.lang.Class, java.lang.reflect.Field) is available from Spring 3.2.0+
+        // TODO: spring 3.2之后提供了 TypeConverter#convertIfNecessary ，然后用转换器转换一下
         if (typeConverterHasConvertIfNecessaryWithFieldParameter) {
           value = this.typeConverter
               .convertIfNecessary(value, springValue.getTargetType(), springValue.getField());

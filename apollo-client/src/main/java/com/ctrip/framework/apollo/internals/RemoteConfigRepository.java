@@ -318,6 +318,7 @@ public class RemoteConfigRepository extends AbstractConfigRepository {
   }
 
   private void scheduleLongPollingRefresh() {
+    // TODO: 把当前这个仓库其实就传到 remoteConfigLongPollService 里面去了
     remoteConfigLongPollService.submit(m_namespace, this);
   }
 
@@ -328,6 +329,7 @@ public class RemoteConfigRepository extends AbstractConfigRepository {
       @Override
       public void run() {
         m_configNeedForceRefresh.set(true);
+        // TODO: 开始尝试进行sync
         trySync();
       }
     });

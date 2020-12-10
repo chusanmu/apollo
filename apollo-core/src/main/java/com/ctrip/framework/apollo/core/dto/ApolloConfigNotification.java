@@ -1,10 +1,14 @@
 package com.ctrip.framework.apollo.core.dto;
 
 /**
+ * TODO: 当该namespaceName对应的配置信息发生变更的时候，会收到服务端的通知
  * @author Jason Song(song_s@ctrip.com)
  */
 public class ApolloConfigNotification {
   private String namespaceName;
+  /**
+   * TODO: 通知ID，应该是递增的， 其实就是数据库主键
+   */
   private long notificationId;
   private volatile ApolloNotificationMessages messages;
 
