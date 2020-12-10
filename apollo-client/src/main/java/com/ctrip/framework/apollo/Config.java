@@ -8,6 +8,8 @@ import java.util.Locale;
 import java.util.Set;
 
 /**
+ * TODO: 配置文件的抽象的顶层接口
+ *
  * @author Jason Song(song_s@ctrip.com)
  */
 public interface Config {
@@ -165,6 +167,7 @@ public interface Config {
   long getDurationProperty(String key, long defaultValue);
 
   /**
+   * TODO: 添加一个listener去监听配置文件的变更
    * Add change listener to this config instance, will be notified when any key is changed in this namespace.
    *
    * @param listener the config change listener

@@ -43,6 +43,7 @@ public abstract class AbstractConfig implements Config {
   private static final ExecutorService m_executorService;
 
   private final List<ConfigChangeListener> m_listeners = Lists.newCopyOnWriteArrayList();
+  // TODO: 维护了感兴趣的keys和感兴趣的key的前缀
   private final Map<ConfigChangeListener, Set<String>> m_interestedKeys = Maps.newConcurrentMap();
   private final Map<ConfigChangeListener, Set<String>> m_interestedKeyPrefixes = Maps.newConcurrentMap();
   private final ConfigUtil m_configUtil;
@@ -84,19 +85,40 @@ public abstract class AbstractConfig implements Config {
     addChangeListener(listener, interestedKeys, null);
   }
 
+  /**
+   *
+   * 添加监听，changeListener
+   * @param listener the config change listener
+   * @param interestedKeys the keys that the listener is interested in
+   * @param interestedKeyPrefixes the key prefixes that the listener is interested in,
+   *                              e.g. "spring." means that {@code listener} is interested in keys that starts with "spring.", such as "spring.banner", "spring.jpa", etc.
+   *                              and "application" means that {@code listener} is interested in keys that starts with "application", such as "applicationName", "application.port", etc.
+   *                              For more details, see {@link com.ctrip.framework.apollo.spring.annotation.ApolloConfigChangeListener#interestedKeyPrefixes()}
+   *                              and {@link java.lang.String#startsWith(String)}
+   *
+   */
   @Override
   public void addChangeListener(ConfigChangeListener listener, Set<String> interestedKeys, Set<String> interestedKeyPrefixes) {
+    // TODO: 只有当前不存在这个listener的时候，然后添加进去
     if (!m_listeners.contains(listener)) {
       m_listeners.add(listener);
+      // TODO: 当感兴趣的key不为空的时候
       if (interestedKeys != null && !interestedKeys.isEmpty()) {
+        // TODO: 将感兴趣的keys放到m_interestedKeys里面去
         m_interestedKeys.put(listener, Sets.newHashSet(interestedKeys));
       }
+      // TODO: 前缀不为空的时候，也放进去
       if (interestedKeyPrefixes != null && !interestedKeyPrefixes.isEmpty()) {
         m_interestedKeyPrefixes.put(listener, Sets.newHashSet(interestedKeyPrefixes));
       }
     }
   }
 
+  /**
+   * 移除changeListener
+   * @param listener the specific config change listener to remove
+   * @return
+   */
   @Override
   public boolean removeChangeListener(ConfigChangeListener listener) {
     m_interestedKeys.remove(listener);
@@ -104,12 +126,20 @@ public abstract class AbstractConfig implements Config {
     return m_listeners.remove(listener);
   }
 
+  /**
+   * TODO: 获取int属性
+   * @param key          the property name
+   * @param defaultValue the default value when key is not found or any error occurred
+   * @return
+   */
   @Override
   public Integer getIntProperty(String key, Integer defaultValue) {
     try {
+      // TODO: 判断m_integerCache是否为空，如果他为空，就开始初始化它
       if (m_integerCache == null) {
         synchronized (this) {
           if (m_integerCache == null) {
+            // TODO: 创建integer的缓存
             m_integerCache = newCache();
           }
         }
@@ -386,8 +416,10 @@ public abstract class AbstractConfig implements Config {
   }
 
   private <T> T getValueFromCache(String key, Function<String, T> parser, Cache<String, T> cache, T defaultValue) {
+    // TODO: 尝试从缓存里面取值
     T result = cache.getIfPresent(key);
 
+    // TODO: 如果缓存里面有值，直接返回回去
     if (result != null) {
       return result;
     }
@@ -396,14 +428,19 @@ public abstract class AbstractConfig implements Config {
   }
 
   private <T> T getValueAndStoreToCache(String key, Function<String, T> parser, Cache<String, T> cache, T defaultValue) {
+    // TODO: 当前config的version
     long currentConfigVersion = m_configVersion.get();
+    // TODO: 根据key去获取属性
     String value = getProperty(key, null);
 
+    // TODO: 如果拿到了，就类型转换一下
     if (value != null) {
       T result = parser.apply(value);
 
+      // TODO: 转为之后，结果不是null，并且版本号对的上，就把它放进缓存里面
       if (result != null) {
         synchronized (this) {
+          // TODO: 如果版本号 对的上，就把它放进缓存
           if (m_configVersion.get() == currentConfigVersion) {
             cache.put(key, result);
           }
@@ -415,6 +452,12 @@ public abstract class AbstractConfig implements Config {
     return defaultValue;
   }
 
+  /**
+   * TODO: 创建cache对象，设置了存储最大大小，以及过期时间
+   *
+   * @param <T>
+   * @return
+   */
   private <T> Cache<String, T> newCache() {
     Cache<String, T> cache = CacheBuilder.newBuilder()
         .maximumSize(m_configUtil.getMaxConfigCacheSize())
@@ -425,31 +468,42 @@ public abstract class AbstractConfig implements Config {
   }
 
   /**
+   * TODO: 清除所有的缓存
    * Clear config cache
    */
   protected void clearConfigCache() {
     synchronized (this) {
+      // TODO: 遍历所有的缓存，然后不为空的话 就进行清除
       for (Cache c : allCaches) {
         if (c != null) {
           c.invalidateAll();
         }
       }
+      // TODO: 版本号+1
       m_configVersion.incrementAndGet();
     }
   }
 
+  /**
+   * 传播配置变更事件
+   * @param changeEvent
+   */
   protected void fireConfigChange(final ConfigChangeEvent changeEvent) {
+    // TODO: 遍历所有的listener，
     for (final ConfigChangeListener listener : m_listeners) {
       // check whether the listener is interested in this change event
+      // TODO: 判断是否是它感兴趣的，如果不是，就直接continue
       if (!isConfigChangeListenerInterested(listener, changeEvent)) {
         continue;
       }
+      // TODO: listener回调 这个回调是异步的
       m_executorService.submit(new Runnable() {
         @Override
         public void run() {
           String listenerName = listener.getClass().getName();
           Transaction transaction = Tracer.newTransaction("Apollo.ConfigChangeListener", listenerName);
           try {
+            // TODO: 进行回调
             listener.onChange(changeEvent);
             transaction.setStatus(Transaction.SUCCESS);
           } catch (Throwable ex) {
@@ -464,33 +518,46 @@ public abstract class AbstractConfig implements Config {
     }
   }
 
+  /**
+   * TODO: 判断这个event是否是这个listener感兴趣的
+   *
+   * @param configChangeListener
+   * @param configChangeEvent
+   * @return
+   */
   private boolean isConfigChangeListenerInterested(ConfigChangeListener configChangeListener, ConfigChangeEvent configChangeEvent) {
+    // TODO: 获得这个listener感兴趣的keys
     Set<String> interestedKeys = m_interestedKeys.get(configChangeListener);
+    // TODO: 获取这个listener感兴趣的前缀
     Set<String> interestedKeyPrefixes = m_interestedKeyPrefixes.get(configChangeListener);
 
+    // TODO: 没有值，表示所有的它都感兴趣
     if ((interestedKeys == null || interestedKeys.isEmpty())
         && (interestedKeyPrefixes == null || interestedKeyPrefixes.isEmpty())) {
       return true; // no interested keys means interested in all keys
     }
 
+    // TODO: 不为空的话，就进行遍历
     if (interestedKeys != null) {
       for (String interestedKey : interestedKeys) {
+        // TODO: 变更的key是否包含感兴趣的key
         if (configChangeEvent.isChanged(interestedKey)) {
           return true;
         }
       }
     }
-
+    // TODO: 如果感兴趣的前缀不为空
     if (interestedKeyPrefixes != null) {
       for (String prefix : interestedKeyPrefixes) {
         for (final String changedKey : configChangeEvent.changedKeys()) {
+          // TODO: 如果changeKey是prefix开头的，那么直接返回true
           if (changedKey.startsWith(prefix)) {
             return true;
           }
         }
       }
     }
-
+    // TODO: 最后返回false
     return false;
   }
 

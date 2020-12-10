@@ -114,7 +114,7 @@ public class NotificationControllerV2 implements ReleaseMessageListener {
     if (CollectionUtils.isEmpty(filteredNotifications)) {
       throw new BadRequestException("Invalid format of notifications: " + notificationsAsString);
     }
-    
+    // TODO: 异步 夯住 60s，如果有变更，就返回给客户端
     DeferredResultWrapper deferredResultWrapper = new DeferredResultWrapper(bizConfig.longPollingTimeoutInMilli());
     Set<String> namespaces = Sets.newHashSetWithExpectedSize(filteredNotifications.size());
     Map<String, Long> clientSideNotifications = Maps.newHashMapWithExpectedSize(filteredNotifications.size());

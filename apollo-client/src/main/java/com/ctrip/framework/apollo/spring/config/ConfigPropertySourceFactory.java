@@ -12,6 +12,7 @@ public class ConfigPropertySourceFactory {
   public ConfigPropertySource getConfigPropertySource(String name, Config source) {
     ConfigPropertySource configPropertySource = new ConfigPropertySource(name, source);
 
+    // TODO: 把namespace对应的 propertySource存起来
     configPropertySources.add(configPropertySource);
 
     return configPropertySource;

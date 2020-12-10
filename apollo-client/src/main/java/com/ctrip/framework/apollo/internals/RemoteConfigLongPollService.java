@@ -93,12 +93,14 @@ public class RemoteConfigLongPollService {
     boolean added = m_longPollNamespaces.put(namespace, remoteConfigRepository);
     m_notifications.putIfAbsent(namespace, INIT_NOTIFICATION_ID);
     if (!m_longPollStarted.get()) {
+      // TODO: 开始启动长连接
       startLongPolling();
     }
     return added;
   }
 
   private void startLongPolling() {
+    // TODO: 如果已经启动了直接返回
     if (!m_longPollStarted.compareAndSet(false, true)) {
       //already started
       return;
@@ -115,11 +117,13 @@ public class RemoteConfigLongPollService {
           if (longPollingInitialDelayInMills > 0) {
             try {
               logger.debug("Long polling will start in {} ms.", longPollingInitialDelayInMills);
+              // TODO: 默认2s, 2s后启动
               TimeUnit.MILLISECONDS.sleep(longPollingInitialDelayInMills);
             } catch (InterruptedException e) {
               //ignore
             }
           }
+          // TODO:
           doLongPollingRefresh(appId, cluster, dataCenter, secret);
         }
       });
@@ -136,6 +140,13 @@ public class RemoteConfigLongPollService {
     this.m_longPollingStopped.compareAndSet(false, true);
   }
 
+  /**
+   * TODO: 启动长连，连接server，如果有关注的key被更新了，服务端会进行返回
+   * @param appId
+   * @param cluster
+   * @param dataCenter
+   * @param secret
+   */
   private void doLongPollingRefresh(String appId, String cluster, String dataCenter, String secret) {
     final Random random = new Random();
     ServiceDTO lastServiceDto = null;
@@ -151,10 +162,13 @@ public class RemoteConfigLongPollService {
       String url = null;
       try {
         if (lastServiceDto == null) {
+          // TODO: 获取service 列表
           List<ServiceDTO> configServices = getConfigServices();
+          // TODO: 随机获取一个service
           lastServiceDto = configServices.get(random.nextInt(configServices.size()));
         }
 
+        // TODO: 拼装url
         url =
             assembleLongPollRefreshUrl(lastServiceDto.getHomepageUrl(), appId, cluster, dataCenter,
                 m_notifications);
@@ -162,6 +176,7 @@ public class RemoteConfigLongPollService {
         logger.debug("Long polling from {}", url);
 
         HttpRequest request = new HttpRequest(url);
+        // TODO: 超时时间设置为90s
         request.setReadTimeout(LONG_POLLING_READ_TIMEOUT);
         if (!StringUtils.isBlank(secret)) {
           Map<String, String> headers = Signature.buildHttpHeaders(url, appId, secret);
@@ -170,11 +185,14 @@ public class RemoteConfigLongPollService {
 
         transaction.addData("Url", url);
 
+        // TODO: 进行调用
         final HttpResponse<List<ApolloConfigNotification>> response =
             m_httpUtil.doGet(request, m_responseType);
 
         logger.debug("Long polling response: {}, url: {}", response.getStatusCode(), url);
+        // TODO: 如果返回了200, 并且响应体不为空，说明apollo配置有更新
         if (response.getStatusCode() == 200 && response.getBody() != null) {
+          // TODO: 进行远程同步
           updateNotifications(response.getBody());
           updateRemoteNotifications(response.getBody());
           transaction.addData("Result", response.getBody().toString());
@@ -275,6 +293,16 @@ public class RemoteConfigLongPollService {
     return STRING_JOINER.join(m_longPollNamespaces.keySet());
   }
 
+  /**
+   * 拼装url，用于调用config service
+   *
+   * @param uri
+   * @param appId
+   * @param cluster
+   * @param dataCenter
+   * @param notificationsMap
+   * @return
+   */
   String assembleLongPollRefreshUrl(String uri, String appId, String cluster, String dataCenter,
                                     Map<String, Long> notificationsMap) {
     Map<String, String> queryParams = Maps.newHashMap();

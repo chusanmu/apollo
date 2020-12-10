@@ -28,6 +28,12 @@ public class ConfigPropertySource extends EnumerablePropertySource<Config> {
     return propertyNames.toArray(new String[propertyNames.size()]);
   }
 
+  /**
+   * TODO: 获取某个属性
+   *
+   * @param name
+   * @return
+   */
   @Override
   public Object getProperty(String name) {
     return this.source.getProperty(name, null);

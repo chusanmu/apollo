@@ -57,36 +57,62 @@ public class ApolloAnnotationProcessor extends ApolloProcessor implements BeanFa
     springValueRegistry = SpringInjector.getInstance(SpringValueRegistry.class);
   }
 
+  /**
+   * TODO: 处理字段
+   * @param bean
+   * @param beanName
+   * @param field
+   */
   @Override
   protected void processField(Object bean, String beanName, Field field) {
     this.processApolloConfig(bean, field);
     this.processApolloJsonValue(bean, beanName, field);
   }
 
+  /**
+   * TODO: 处理每个方法
+   *
+   * @param bean
+   * @param beanName
+   * @param method
+   */
   @Override
   protected void processMethod(final Object bean, String beanName, final Method method) {
     this.processApolloConfigChangeListener(bean, method);
     this.processApolloJsonValue(bean, beanName, method);
   }
 
+
+  /**
+   * TODO: 处理字段上的 ApolloConfig
+   * @param bean
+   * @param field
+   */
   private void processApolloConfig(Object bean, Field field) {
     ApolloConfig annotation = AnnotationUtils.getAnnotation(field, ApolloConfig.class);
+    // TODO: 没有apolloConfig的话，就直接return掉了
     if (annotation == null) {
       return;
     }
 
+    // TODO: 你ApolloConfig标注字段类型必须是 Config类型的
     Preconditions.checkArgument(Config.class.isAssignableFrom(field.getType()),
         "Invalid type: %s for field: %s, should be Config", field.getType(), field);
 
+    // TODO: 获得namespace
     final String namespace = annotation.value();
+    // TODO: $占位符解析，解析出来值
     final String resolvedNamespace = this.environment.resolveRequiredPlaceholders(namespace);
+    // TODO: 到这就会去连接apollo服务，来获取config
     Config config = ConfigService.getConfig(resolvedNamespace);
 
+    // TODO: 把值设置上去
     ReflectionUtils.makeAccessible(field);
     ReflectionUtils.setField(field, bean, config);
   }
 
   private void processApolloConfigChangeListener(final Object bean, final Method method) {
+    // TODO: 处理配置变更监听
     ApolloConfigChangeListener annotation = AnnotationUtils
         .findAnnotation(method, ApolloConfigChangeListener.class);
     if (annotation == null) {
@@ -101,9 +127,11 @@ public class ApolloAnnotationProcessor extends ApolloProcessor implements BeanFa
         method);
 
     ReflectionUtils.makeAccessible(method);
+    // TODO: 把注解的值拿到
     String[] namespaces = annotation.value();
     String[] annotatedInterestedKeys = annotation.interestedKeys();
     String[] annotatedInterestedKeyPrefixes = annotation.interestedKeyPrefixes();
+    // TODO: 开始注册监听
     ConfigChangeListener configChangeListener = new ConfigChangeListener() {
       @Override
       public void onChange(ConfigChangeEvent changeEvent) {
@@ -118,9 +146,11 @@ public class ApolloAnnotationProcessor extends ApolloProcessor implements BeanFa
             : null;
 
     for (String namespace : namespaces) {
+      // TODO: 解析namespace
       final String resolvedNamespace = this.environment.resolveRequiredPlaceholders(namespace);
       Config config = ConfigService.getConfig(resolvedNamespace);
 
+      // TODO: 将configChangeListener加到监听里面去
       if (interestedKeys == null && interestedKeyPrefixes == null) {
         config.addChangeListener(configChangeListener);
       } else {
@@ -176,12 +206,14 @@ public class ApolloAnnotationProcessor extends ApolloProcessor implements BeanFa
     }
 
     Type[] types = method.getGenericParameterTypes();
+    // TODO: 方法的话 入参必须只有一个
     Preconditions.checkArgument(types.length == 1,
         "Ignore @Value setter {}.{}, expecting 1 parameter, actual {} parameters",
         bean.getClass().getName(), method.getName(), method.getParameterTypes().length);
 
     boolean accessible = method.isAccessible();
     method.setAccessible(true);
+    // TODO: 执行方法
     ReflectionUtils.invokeMethod(method, bean, parseJsonValue((String) propertyValue, types[0]));
     method.setAccessible(accessible);
 

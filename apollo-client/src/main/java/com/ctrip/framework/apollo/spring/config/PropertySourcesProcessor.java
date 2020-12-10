@@ -60,6 +60,7 @@ public class PropertySourcesProcessor implements BeanFactoryPostProcessor, Envir
   }
 
   private void initializePropertySources() {
+    // TODO: 如果容器里面已经有apollo的属性了，就说明已经初始化完了
     if (environment.getPropertySources().contains(PropertySourcesConstants.APOLLO_PROPERTY_SOURCE_NAME)) {
       //already initialized
       return;
@@ -67,34 +68,43 @@ public class PropertySourcesProcessor implements BeanFactoryPostProcessor, Envir
     CompositePropertySource composite = new CompositePropertySource(PropertySourcesConstants.APOLLO_PROPERTY_SOURCE_NAME);
 
     //sort by order asc
+    // TODO: 通过order进行排序
     ImmutableSortedSet<Integer> orders = ImmutableSortedSet.copyOf(NAMESPACE_NAMES.keySet());
     Iterator<Integer> iterator = orders.iterator();
 
     while (iterator.hasNext()) {
       int order = iterator.next();
+      // TODO: 根据排序 把namespace拿到
       for (String namespace : NAMESPACE_NAMES.get(order)) {
+        // TODO: 去服务端取配置
         Config config = ConfigService.getConfig(namespace);
-
+        // TODO: 最后加到environment中
         composite.addPropertySource(configPropertySourceFactory.getConfigPropertySource(namespace, config));
       }
     }
 
+    // TODO: 将namespace进行清空
     // clean up
     NAMESPACE_NAMES.clear();
 
     // add after the bootstrap property source or to the first
+    // TODO: 要确保 ApolloBootstrapPropertySources 在第一位
     if (environment.getPropertySources()
         .contains(PropertySourcesConstants.APOLLO_BOOTSTRAP_PROPERTY_SOURCE_NAME)) {
 
       // ensure ApolloBootstrapPropertySources is still the first
+      // TODO: 确保apolloBootstrapPropertySources 还是在第一个
       ensureBootstrapPropertyPrecedence(environment);
 
+      // TODO: 把composite放到ApolloBootstrapPropertySource后面
       environment.getPropertySources()
           .addAfter(PropertySourcesConstants.APOLLO_BOOTSTRAP_PROPERTY_SOURCE_NAME, composite);
     } else {
+      // TODO: 把composite放到第一位
       environment.getPropertySources().addFirst(composite);
     }
   }
+
 
   private void ensureBootstrapPropertyPrecedence(ConfigurableEnvironment environment) {
     MutablePropertySources propertySources = environment.getPropertySources();
@@ -111,6 +121,11 @@ public class PropertySourcesProcessor implements BeanFactoryPostProcessor, Envir
     propertySources.addFirst(bootstrapPropertySource);
   }
 
+  /**
+   * TODO: 初始化自动更新功能
+   *
+   * @param beanFactory
+   */
   private void initializeAutoUpdatePropertiesFeature(ConfigurableListableBeanFactory beanFactory) {
     if (!configUtil.isAutoUpdateInjectedSpringPropertiesEnabled() ||
         !AUTO_UPDATE_INITIALIZED_BEAN_FACTORIES.add(beanFactory)) {
@@ -120,7 +135,9 @@ public class PropertySourcesProcessor implements BeanFactoryPostProcessor, Envir
     AutoUpdateConfigChangeListener autoUpdateConfigChangeListener = new AutoUpdateConfigChangeListener(
         environment, beanFactory);
 
+    // TODO:
     List<ConfigPropertySource> configPropertySources = configPropertySourceFactory.getAllConfigPropertySources();
+    // TODO: 给每个配置 添加了一个配置文件变更监听器
     for (ConfigPropertySource configPropertySource : configPropertySources) {
       configPropertySource.addChangeListener(autoUpdateConfigChangeListener);
     }

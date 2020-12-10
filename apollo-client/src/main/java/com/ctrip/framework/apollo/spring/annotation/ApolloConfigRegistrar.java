@@ -13,6 +13,9 @@ import org.springframework.core.type.AnnotationMetadata;
  */
 public class ApolloConfigRegistrar implements ImportBeanDefinitionRegistrar, EnvironmentAware {
 
+  /**
+   * TODO: 使用SPI的方式 加载ApolloConfigRegistrarHelp, 默认是 DefaultApolloConfigRegistrarHelper
+   */
   private final ApolloConfigRegistrarHelper helper = ServiceBootstrap.loadPrimary(ApolloConfigRegistrarHelper.class);
 
   @Override
@@ -20,6 +23,11 @@ public class ApolloConfigRegistrar implements ImportBeanDefinitionRegistrar, Env
     helper.registerBeanDefinitions(importingClassMetadata, registry);
   }
 
+  /**
+   * TODO: 设置environment
+   *
+   * @param environment
+   */
   @Override
   public void setEnvironment(Environment environment) {
     this.helper.setEnvironment(environment);

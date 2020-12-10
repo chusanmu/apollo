@@ -4,11 +4,18 @@ import java.util.Map;
 import java.util.Set;
 
 /**
+ * TODO: config变更事件
  * A change event when a namespace's config is changed.
  * @author Jason Song(song_s@ctrip.com)
  */
 public class ConfigChangeEvent {
+  /**
+   * namespace
+   */
   private final String m_namespace;
+  /**
+   * 涉及到的变更
+   */
   private final Map<String, ConfigChange> m_changes;
 
   /**

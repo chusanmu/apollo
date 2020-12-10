@@ -19,10 +19,13 @@ public abstract class ApolloProcessor implements BeanPostProcessor, PriorityOrde
   public Object postProcessBeforeInitialization(Object bean, String beanName)
       throws BeansException {
     Class clazz = bean.getClass();
+    // TODO: 处理这个bean所有的字段
     for (Field field : findAllField(clazz)) {
       processField(bean, beanName, field);
     }
+    // TODO: 处理这个bean所有的方法
     for (Method method : findAllMethod(clazz)) {
+      // TODO: 处理每个方法
       processMethod(bean, beanName, method);
     }
     return bean;

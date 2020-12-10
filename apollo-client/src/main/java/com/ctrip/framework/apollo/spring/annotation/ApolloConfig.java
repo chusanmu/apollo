@@ -34,6 +34,7 @@ import com.ctrip.framework.apollo.core.ConfigConsts;
 @Documented
 public @interface ApolloConfig {
   /**
+   * TODO: 指定namespace， 默认是application
    * Apollo namespace for the config, if not specified then default to application
    */
   String value() default ConfigConsts.NAMESPACE_APPLICATION;

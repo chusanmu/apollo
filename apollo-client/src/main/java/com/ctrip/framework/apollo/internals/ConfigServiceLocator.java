@@ -141,9 +141,11 @@ public class ConfigServiceLocator {
   }
 
   private synchronized void updateConfigServices() {
+    // TODO: 合并获取url
     String url = assembleMetaServiceUrl();
 
     HttpRequest request = new HttpRequest(url);
+    // TODO: 最大尝试次数 两次
     int maxRetries = 2;
     Throwable exception = null;
 
@@ -151,6 +153,7 @@ public class ConfigServiceLocator {
       Transaction transaction = Tracer.newTransaction("Apollo.MetaService", "getConfigService");
       transaction.addData("Url", url);
       try {
+        // TODO: 调apollo service接口 获取serviceDto集合
         HttpResponse<List<ServiceDTO>> response = m_httpUtil.doGet(request, m_responseType);
         transaction.setStatus(Transaction.SUCCESS);
         List<ServiceDTO> services = response.getBody();
@@ -159,6 +162,7 @@ public class ConfigServiceLocator {
           continue;
         }
         setConfigServices(services);
+        // TODO: 成功了 直接返回了
         return;
       } catch (Throwable ex) {
         Tracer.logEvent("ApolloConfigException", ExceptionUtil.getDetailMessage(ex));

@@ -12,6 +12,7 @@ import org.springframework.core.Ordered;
 import com.ctrip.framework.apollo.core.ConfigConsts;
 
 /**
+ * TODO: 两种方式启用apollo, 一种是使用这个注解进行启动，另一个是使用配置文件去启动 apollo.bootstrap.enabled 为启用时，也会启用apollo
  * Use this annotation to register Apollo property sources when using Java Config.
  *
  * <p>Configuration example with multiple namespaces:</p>

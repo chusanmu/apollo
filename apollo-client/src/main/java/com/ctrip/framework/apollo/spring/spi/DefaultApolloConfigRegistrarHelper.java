@@ -22,19 +22,28 @@ public class DefaultApolloConfigRegistrarHelper implements ApolloConfigRegistrar
 
   @Override
   public void registerBeanDefinitions(AnnotationMetadata importingClassMetadata, BeanDefinitionRegistry registry) {
+    // TODO: 获取EnableApolloConfig注解
     AnnotationAttributes attributes = AnnotationAttributes
         .fromMap(importingClassMetadata.getAnnotationAttributes(EnableApolloConfig.class.getName()));
+    // TODO: value指定了多个namespace
     final String[] namespaces = attributes.getStringArray("value");
     final int order = attributes.getNumber("order");
+    // TODO: 解析namespace
     final String[] resolvedNamespaces = this.resolveNamespaces(namespaces);
+
     PropertySourcesProcessor.addNamespaces(Lists.newArrayList(resolvedNamespaces), order);
 
     Map<String, Object> propertySourcesPlaceholderPropertyValues = new HashMap<>();
     // to make sure the default PropertySourcesPlaceholderConfigurer's priority is higher than PropertyPlaceholderConfigurer
     propertySourcesPlaceholderPropertyValues.put("order", 0);
 
+
+    /* ---------------- 开始进行注册bean -------------- */
+
+    // TODO: 注册 PropertySourcesPlaceholderConfigurer 这个bean
     BeanRegistrationUtil.registerBeanDefinitionIfNotExists(registry, PropertySourcesPlaceholderConfigurer.class.getName(),
         PropertySourcesPlaceholderConfigurer.class, propertySourcesPlaceholderPropertyValues);
+    // TODO: 注册PropertySourcesProcessor
     BeanRegistrationUtil.registerBeanDefinitionIfNotExists(registry, PropertySourcesProcessor.class.getName(),
         PropertySourcesProcessor.class);
     BeanRegistrationUtil.registerBeanDefinitionIfNotExists(registry, ApolloAnnotationProcessor.class.getName(),
@@ -45,6 +54,12 @@ public class DefaultApolloConfigRegistrarHelper implements ApolloConfigRegistrar
         SpringValueDefinitionProcessor.class);
   }
 
+  /**
+   * TODO: 获取 namespaces，通过environment进行解析namespace，允许你用 ${} 的方式进行配置
+   *
+   * @param namespaces
+   * @return
+   */
   private String[] resolveNamespaces(String[] namespaces) {
     String[] resolvedNamespaces = new String[namespaces.length];
     for (int i = 0; i < namespaces.length; i++) {

@@ -20,8 +20,13 @@ public abstract class AbstractConfigRepository implements ConfigRepository {
   private List<RepositoryChangeListener> m_listeners = Lists.newCopyOnWriteArrayList();
   protected PropertiesFactory propertiesFactory = ApolloInjector.getInstance(PropertiesFactory.class);
 
+  /**
+   * TODO: 尝试同步
+   * @return
+   */
   protected boolean trySync() {
     try {
+      // TODO: 开始同步，然后返回true
       sync();
       return true;
     } catch (Throwable ex) {
@@ -35,6 +40,11 @@ public abstract class AbstractConfigRepository implements ConfigRepository {
 
   protected abstract void sync();
 
+  /**
+   * TODO: 当前listeners集合不包括listener，才进行添加
+   *
+   * @param listener the listener to observe the changes
+   */
   @Override
   public void addChangeListener(RepositoryChangeListener listener) {
     if (!m_listeners.contains(listener)) {
@@ -42,12 +52,23 @@ public abstract class AbstractConfigRepository implements ConfigRepository {
     }
   }
 
+  /**
+   * TODO: 移除listener监听
+   * @param listener the listener to remove
+   */
   @Override
   public void removeChangeListener(RepositoryChangeListener listener) {
     m_listeners.remove(listener);
   }
 
+  /**
+   * TODO: 传播仓库变更事件
+   *
+   * @param namespace
+   * @param newProperties
+   */
   protected void fireRepositoryChange(String namespace, Properties newProperties) {
+    // TODO: 遍历listeners 逐个的进行回调
     for (RepositoryChangeListener listener : m_listeners) {
       try {
         listener.onRepositoryChange(namespace, newProperties);

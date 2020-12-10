@@ -88,8 +88,11 @@ public class RemoteConfigRepository extends AbstractConfigRepository {
     m_configNeedForceRefresh = new AtomicBoolean(true);
     m_loadConfigFailSchedulePolicy = new ExponentialSchedulePolicy(m_configUtil.getOnErrorRetryInterval(),
         m_configUtil.getOnErrorRetryInterval() * 8);
+    // TODO: 尝试进行同步
     this.trySync();
+    // TODO: 默认每五分钟 同步一次
     this.schedulePeriodicRefresh();
+    // TODO: 向服务端发起长连接
     this.scheduleLongPollingRefresh();
   }
 
@@ -114,6 +117,7 @@ public class RemoteConfigRepository extends AbstractConfigRepository {
   private void schedulePeriodicRefresh() {
     logger.debug("Schedule periodic refresh with interval: {} {}",
         m_configUtil.getRefreshInterval(), m_configUtil.getRefreshIntervalTimeUnit());
+    // TODO: 固定时间同步一次，默认五分钟同步一次
     m_executorService.scheduleAtFixedRate(
         new Runnable() {
           @Override
@@ -132,7 +136,9 @@ public class RemoteConfigRepository extends AbstractConfigRepository {
     Transaction transaction = Tracer.newTransaction("Apollo.ConfigService", "syncRemoteConfig");
 
     try {
+      // TODO: 从缓存中取到之前存着的
       ApolloConfig previous = m_configCache.get();
+      // TODO: 从apollo进行加载
       ApolloConfig current = loadApolloConfig();
 
       //reference equals means HTTP 304
@@ -178,7 +184,7 @@ public class RemoteConfigRepository extends AbstractConfigRepository {
     int maxRetries = m_configNeedForceRefresh.get() ? 2 : 1;
     long onErrorSleepTime = 0; // 0 means no sleep
     Throwable exception = null;
-
+    // TODO: 会去调apollo接口
     List<ServiceDTO> configServices = getConfigServices();
     String url = null;
     retryLoopLabel:
@@ -203,6 +209,7 @@ public class RemoteConfigRepository extends AbstractConfigRepository {
           }
         }
 
+        // TODO: 拼装url
         url = assembleQueryConfigUrl(configService.getHomepageUrl(), appId, cluster, m_namespace,
                 dataCenter, m_remoteMessages.get(), m_configCache.get());
 
@@ -218,13 +225,14 @@ public class RemoteConfigRepository extends AbstractConfigRepository {
         transaction.addData("Url", url);
         try {
 
+          // TODO: 从 apollo config service 拉取最新的config
           HttpResponse<ApolloConfig> response = m_httpUtil.doGet(request, ApolloConfig.class);
           m_configNeedForceRefresh.set(false);
           m_loadConfigFailSchedulePolicy.success();
 
           transaction.addData("StatusCode", response.getStatusCode());
           transaction.setStatus(Transaction.SUCCESS);
-
+          // TODO: 如果服务端返回来了个
           if (response.getStatusCode() == 304) {
             logger.debug("Config server responds with 304 HTTP status code.");
             return m_configCache.get();

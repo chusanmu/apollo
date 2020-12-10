@@ -73,12 +73,14 @@ public class ApolloApplicationContextInitializer implements
   public void initialize(ConfigurableApplicationContext context) {
     ConfigurableEnvironment environment = context.getEnvironment();
 
+    // TODO: 判断你有没有启用apollo呀，如果没启用直接return了，默认false 不启用
     if (!environment.getProperty(PropertySourcesConstants.APOLLO_BOOTSTRAP_ENABLED, Boolean.class, false)) {
       logger.debug("Apollo bootstrap config is not enabled for context {}, see property: ${{}}", context, PropertySourcesConstants.APOLLO_BOOTSTRAP_ENABLED);
       return;
     }
     logger.debug("Apollo bootstrap config is enabled for context {}", context);
 
+    // TODO: 如果启用了，这时候开始初始化
     initialize(environment);
   }
 
@@ -90,22 +92,28 @@ public class ApolloApplicationContextInitializer implements
    */
   protected void initialize(ConfigurableEnvironment environment) {
 
+    // TODO: 判断环境中 是否有这个 ApolloBootstrapPropertySources 属性了，如果已经有了，则说明初始化过了，就直接return掉
     if (environment.getPropertySources().contains(PropertySourcesConstants.APOLLO_BOOTSTRAP_PROPERTY_SOURCE_NAME)) {
       //already initialized
       return;
     }
 
+    // TODO: 获取namespaces, 默认是application, 可以配置多个，然后以逗号分隔
     String namespaces = environment.getProperty(PropertySourcesConstants.APOLLO_BOOTSTRAP_NAMESPACES, ConfigConsts.NAMESPACE_APPLICATION);
     logger.debug("Apollo bootstrap namespaces: {}", namespaces);
+    // TODO: 获取namespaces列表
     List<String> namespaceList = NAMESPACE_SPLITTER.splitToList(namespaces);
 
+
     CompositePropertySource composite = new CompositePropertySource(PropertySourcesConstants.APOLLO_BOOTSTRAP_PROPERTY_SOURCE_NAME);
+    // TODO: 把从不同的namespace获取
     for (String namespace : namespaceList) {
       Config config = ConfigService.getConfig(namespace);
 
       composite.addPropertySource(configPropertySourceFactory.getConfigPropertySource(namespace, config));
     }
 
+    // TODO: 将composite设置到环境中去
     environment.getPropertySources().addFirst(composite);
   }
 
@@ -113,22 +121,25 @@ public class ApolloApplicationContextInitializer implements
    * To fill system properties from environment config
    */
   void initializeSystemProperty(ConfigurableEnvironment environment) {
+    // TODO: 填充apollo的一些属性 例如app.id apollo.meta等
     for (String propertyName : APOLLO_SYSTEM_PROPERTIES) {
       fillSystemPropertyFromEnvironment(environment, propertyName);
     }
   }
 
   private void fillSystemPropertyFromEnvironment(ConfigurableEnvironment environment, String propertyName) {
+    // TODO: 如果这个值在系统里面已经有了，那直接返回就行了，否则去填充至System中
     if (System.getProperty(propertyName) != null) {
       return;
     }
 
+    // TODO: 从环境中把这个属性值拿到
     String propertyValue = environment.getProperty(propertyName);
 
     if (Strings.isNullOrEmpty(propertyValue)) {
       return;
     }
-
+    // TODO: 设置到System中
     System.setProperty(propertyName, propertyValue);
   }
 
@@ -148,15 +159,18 @@ public class ApolloApplicationContextInitializer implements
   public void postProcessEnvironment(ConfigurableEnvironment configurableEnvironment, SpringApplication springApplication) {
 
     // should always initialize system properties like app.id in the first place
+    // TODO: 填充系统属性
     initializeSystemProperty(configurableEnvironment);
 
     Boolean eagerLoadEnabled = configurableEnvironment.getProperty(PropertySourcesConstants.APOLLO_BOOTSTRAP_EAGER_LOAD_ENABLED, Boolean.class, false);
 
     //EnvironmentPostProcessor should not be triggered if you don't want Apollo Loading before Logging System Initialization
+    // TODO: 是否在日志系统加载之前进行加载
     if (!eagerLoadEnabled) {
       return;
     }
 
+    // TODO: 判断是否开启了apollo 如果开启了，然后进行初始化
     Boolean bootstrapEnabled = configurableEnvironment.getProperty(PropertySourcesConstants.APOLLO_BOOTSTRAP_ENABLED, Boolean.class, false);
 
     if (bootstrapEnabled) {
